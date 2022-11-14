@@ -290,6 +290,92 @@ int get_could_not_authenticate_personalized_root_hash_patch(void* kernel_buf,siz
     return 0;
 }
 
+int get_root_volume_seal_is_broken_patch(void* kernel_buf,size_t kernel_len) {
+
+    printf("%s: Entering ...\n", __FUNCTION__);
+
+    char roothash_authenticated_string[sizeof("\"root volume seal is broken %p\\n\"")] = "\"root volume seal is broken %p\\n\"";
+
+    unsigned char *roothash_authenticated_loc = memmem(kernel_buf, kernel_len, roothash_authenticated_string, sizeof("\"root volume seal is broken %p\\n\"") - 1);
+    if(!roothash_authenticated_loc) {
+        printf("%s: Could not find \"%s\" string\n", __FUNCTION__, roothash_authenticated_string);
+        return -1;
+    }
+
+    for (; *roothash_authenticated_loc != 0; roothash_authenticated_loc--);
+    roothash_authenticated_loc++;
+
+    printf("%s: Found \"%s\" str loc at %p\n", __FUNCTION__, roothash_authenticated_string, GET_OFFSET(kernel_len, roothash_authenticated_loc));
+
+    addr_t roothash_authenticated_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, roothash_authenticated_loc));
+    if(!roothash_authenticated_ref) {
+        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, roothash_authenticated_string);
+        return -1;
+    }
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, roothash_authenticated_string, (void*) roothash_authenticated_ref);
+
+    addr_t tbnz_ref = step64_back(kernel_buf, roothash_authenticated_ref, 20 * 4, 0x36000000, 0x7E000000);
+    if(!tbnz_ref) {
+        printf("%s: Could not find tbnz\n",__FUNCTION__);
+        return -1;
+    }
+    printf("%s: Found tbnz at %p\n",__FUNCTION__, (void*) tbnz_ref);
+
+    printf("%s: Patching tbnz at %p\n",__FUNCTION__, (void*) tbnz_ref);
+    *((uint32_t *) (kernel_buf + tbnz_ref)) = 0xd503201f;
+    printf("%s: Patched tbnz at %p\n",__FUNCTION__, (void*) tbnz_ref);
+
+    return 0;
+}
+
+
+
+int get_update_rootfs_rw_patch(void* kernel_buf,size_t kernel_len) {
+
+    printf("%s: Entering ...\n", __FUNCTION__);
+
+    char update_rootfs_rw_string[sizeof("%s:%d: %s Updating mount to read/write mode is not allowed")] = "%s:%d: %s Updating mount to read/write mode is not allowed";
+
+    unsigned char *update_rootfs_rw_loc = memmem(kernel_buf, kernel_len, update_rootfs_rw_string, sizeof("%s:%d: %s Updating mount to read/write mode is not allowed") - 1);
+    if(!update_rootfs_rw_loc) {
+        printf("%s: Could not find \"%s\" string\n", __FUNCTION__, update_rootfs_rw_string);
+        return -1;
+    }
+
+    for (; *update_rootfs_rw_loc != 0; update_rootfs_rw_loc--);
+    update_rootfs_rw_loc++;
+
+    printf("%s: Found \"%s\" str loc at %p\n", __FUNCTION__, update_rootfs_rw_string, GET_OFFSET(kernel_len, update_rootfs_rw_loc));
+
+    addr_t update_rootfs_rw_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, update_rootfs_rw_loc));
+    if(!update_rootfs_rw_ref) {
+        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, update_rootfs_rw_string);
+        return -1;
+    }
+
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, update_rootfs_rw_string, (void*) update_rootfs_rw_ref);
+
+    addr_t tbnz_ref = step64_back(kernel_buf, update_rootfs_rw_ref, 200 * 4, 0x36000000, 0x7E000000);
+    if(!tbnz_ref) {
+        printf("%s: Could not find tbnz\n",__FUNCTION__);
+        return -1;
+    }
+    printf("%s: Found tbnz at %p\n",__FUNCTION__, (void*) tbnz_ref);
+
+    addr_t tbnz_ref2 = step64_back(kernel_buf, tbnz_ref - 4, 200 * 4, 0x36000000, 0x7E000000);
+    if(!tbnz_ref2) {
+        printf("%s: Could not find tbnz\n",__FUNCTION__);
+        return -1;
+    }
+    printf("%s: Found tbnz at %p\n",__FUNCTION__, (void*) tbnz_ref2);
+
+    printf("%s: Patching tbnz at %p\n",__FUNCTION__, (void*) tbnz_ref2);
+    *((uint32_t *) (kernel_buf + tbnz_ref2)) = 0xd503201f;
+    printf("%s: Patched tbnz at %p\n",__FUNCTION__, (void*) tbnz_ref2);
+
+    return 0;
+}
+
 int get_amfi_out_of_my_way_patch(void* kernel_buf,size_t kernel_len) {
     
     printf("%s: Entering ...\n",__FUNCTION__);
@@ -356,6 +442,8 @@ int main(int argc, char **argv) {
         printf("\t-s\t\tPatch SPUFirmwareValidation (iOS 15 Only)\n");
         printf("\t-r\t\tPatch RootVPNotAuthenticatedAfterMounting (iOS 15 Only)\n");
         printf("\t-o\t\tPatch could_not_authenticate_personalized_root_hash (iOS 15 Only)\n");
+        printf("\t-e\t\tPatch root volume seal is broken (iOS 15 Only)\n");
+        printf("\t-u\t\tPatch update_rootfs_rw (iOS 15 Only)\n");
         printf("\t-p\t\tPatch AMFIInitializeLocalSigningPublicKey (iOS 15 Only)\n");
         return 0;
     }
@@ -417,6 +505,14 @@ int main(int argc, char **argv) {
         if(strcmp(argv[i], "-o") == 0) {
             printf("Kernel: Adding could_not_authenticate_personalized_root_hash patch...\n");
             get_could_not_authenticate_personalized_root_hash_patch(kernel_buf,kernel_len);
+        }
+        if(strcmp(argv[i], "-e") == 0) {
+            printf("Kernel: Adding root volume seal is broken patch...\n");
+            get_root_volume_seal_is_broken_patch(kernel_buf,kernel_len);
+        }
+        if(strcmp(argv[i], "-u") == 0) {
+            printf("Kernel: Adding update_rootfs_rw patch...\n");
+            get_update_rootfs_rw_patch(kernel_buf,kernel_len);
         }
     }
     
