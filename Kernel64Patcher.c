@@ -429,6 +429,34 @@ int get_amfi_out_of_my_way_patch(void* kernel_buf,size_t kernel_len) {
     return 0;
 }
 
+int is_root_hash_authentication_required_ios_patch(void* kernel_buf,size_t kernel_len) {
+    char authentication_required_string[sizeof("is_root_hash_authentication_required_ios")] = "is_root_hash_authentication_required_ios";
+
+    unsigned char *authentication_required_loc = memmem(kernel_buf, kernel_len, authentication_required_string, sizeof("is_root_hash_authentication_required_ios") - 1);
+
+    if(!authentication_required_loc) {
+        printf("%s: Could not find \"%s\" string\n", __FUNCTION__, authentication_required_string);
+        return -1;
+    }
+
+    printf("%s: Found \"%s\" str loc at %p\n", __FUNCTION__, authentication_required_string, GET_OFFSET(kernel_len, authentication_required_loc));
+
+    addr_t authentication_required_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, authentication_required_loc));
+    if(!authentication_required_ref) {
+        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, authentication_required_string);
+        return -1;
+    }
+
+    /*000080D2 C0035FD6*/
+
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, authentication_required_string, (void*) authentication_required_ref);
+    addr_t function = authentication_required_ref - 0x50;
+    printf("%s: Patching is_root_hash_authentication_required_ios at %p\n",__FUNCTION__,(void*)function);
+    *(uint32_t *)(kernel_buf + function) = 0x000080D2;
+    *(uint32_t *)(kernel_buf + function + 0x4) = 0xC0035FD6;
+    return 0;
+}
+
 int main(int argc, char **argv) {
     
     printf("%s: Starting...\n", __FUNCTION__);
@@ -445,6 +473,7 @@ int main(int argc, char **argv) {
         printf("\t-e\t\tPatch root volume seal is broken (iOS 15 Only)\n");
         printf("\t-u\t\tPatch update_rootfs_rw (iOS 15 Only)\n");
         printf("\t-p\t\tPatch AMFIInitializeLocalSigningPublicKey (iOS 15 Only)\n");
+        printf("\t-h\t\tPatch is_root_hash_authentication_required_ios (iOS 16 only)\n");
         return 0;
     }
     
@@ -513,6 +542,10 @@ int main(int argc, char **argv) {
         if(strcmp(argv[i], "-u") == 0) {
             printf("Kernel: Adding update_rootfs_rw patch...\n");
             get_update_rootfs_rw_patch(kernel_buf,kernel_len);
+        }
+        if(strcmp(argv[i], "-h") == 0) {
+            printf("Kernel: Adding is_root_hash_authentication_required_ios patch...\n");
+            is_root_hash_authentication_required_ios_patch(kernel_buf,kernel_len);
         }
     }
     
