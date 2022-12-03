@@ -452,8 +452,8 @@ int is_root_hash_authentication_required_ios_patch(void* kernel_buf,size_t kerne
     printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, authentication_required_string, (void*) authentication_required_ref);
     addr_t function = authentication_required_ref - 0x50;
     printf("%s: Patching is_root_hash_authentication_required_ios at %p\n",__FUNCTION__,(void*)function);
-    *(uint32_t *)(kernel_buf + function) = 0x000080D2;
-    *(uint32_t *)(kernel_buf + function + 0x4) = 0xC0035FD6;
+    *(uint32_t *)(kernel_buf + function) = 0xD2800000;
+    *(uint32_t *)(kernel_buf + function + 0x4) = 0xD65F03C0;
     return 0;
 }
 
