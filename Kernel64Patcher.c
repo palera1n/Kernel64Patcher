@@ -452,8 +452,32 @@ int is_root_hash_authentication_required_ios_patch(void* kernel_buf,size_t kerne
     printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, authentication_required_string, (void*) authentication_required_ref);
     addr_t function = authentication_required_ref - 0x50;
     printf("%s: Patching is_root_hash_authentication_required_ios at %p\n",__FUNCTION__,(void*)function);
-    *(uint32_t *)(kernel_buf + function) = 0xD2800000;
-    *(uint32_t *)(kernel_buf + function + 0x4) = 0xD65F03C0;
+    *(uint32_t *)(kernel_buf + function) = 0x000080D2;
+    *(uint32_t *)(kernel_buf + function + 0x4) = 0xC0035FD6;
+    return 0;
+}
+
+int launchd_path_patch(void* kernel_buf,size_t kernel_len) {
+
+    char launchd_path_string[sizeof("/sbin/launchd")] = "/sbin/launchd";
+
+    unsigned char *launchd_path_loc = memmem(kernel_buf, kernel_len, launchd_path_string, sizeof("/sbin/launchd") - 1);
+
+    if(!launchd_path_loc) {
+        printf("%s: Could not find \"%s\" string\n", __FUNCTION__, launchd_path_string);
+        return -1;
+    }
+
+    printf("%s: Found \"%s\" str loc at %p\n", __FUNCTION__, launchd_path_string, GET_OFFSET(kernel_len, launchd_path_loc));
+
+    addr_t addr = (addr_t)GET_OFFSET(kernel_len, launchd_path_loc);
+
+    printf("%s: Patching launchd at %p\n",__FUNCTION__,(void*)addr);
+
+    *(uint32_t *)(launchd_path_loc) = 0x69626A2F;
+    *(uint32_t *)(launchd_path_loc + 0x4) = 0x616C2F6E;
+    *(uint32_t *)(launchd_path_loc + 0x8) = 0x68636E75;
+    *(uint32_t *)(launchd_path_loc + 0x12) = 0x64;
     return 0;
 }
 
@@ -474,6 +498,7 @@ int main(int argc, char **argv) {
         printf("\t-u\t\tPatch update_rootfs_rw (iOS 15 Only)\n");
         printf("\t-p\t\tPatch AMFIInitializeLocalSigningPublicKey (iOS 15 Only)\n");
         printf("\t-h\t\tPatch is_root_hash_authentication_required_ios (iOS 16 only)\n");
+        printf("\t-l\t\tPatch launchd path\n");
         return 0;
     }
     
@@ -546,6 +571,10 @@ int main(int argc, char **argv) {
         if(strcmp(argv[i], "-h") == 0) {
             printf("Kernel: Adding is_root_hash_authentication_required_ios patch...\n");
             is_root_hash_authentication_required_ios_patch(kernel_buf,kernel_len);
+        }
+        if(strcmp(argv[i], "-l") == 0) {
+            printf("Kernel: Adding launchd patch...\n");
+            launchd_path_patch(kernel_buf,kernel_len);
         }
     }
     
