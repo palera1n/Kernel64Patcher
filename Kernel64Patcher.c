@@ -598,6 +598,10 @@ int main(int argc, char **argv) {
             printf("Kernel: Adding launchd patch...\n");
             launchd_path_patch(kernel_buf,kernel_len);
         }
+        if(strcmp(argv[i], "-t") == 0) {
+            printf("Kernel: Adding tfp0 patch...\n");
+            tfp0_patch(kernel_buf,kernel_len);
+        }
     }
     
     /* Write patched kernel */
