@@ -502,25 +502,16 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
     
     printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, pineapple_pizza_string, (void*) pineapple_pizza_ref);
     
-    addr_t next_beq = step64(kernel_buf, pineapple_pizza_ref, 100, INSN_BEQ);
+    addr_t beq = step64(kernel_buf, pineapple_pizza_ref, 100, INSN_BEQ);
     
-    if(!next_beq) {
-        printf("%s: Could not find next b.eq\n",__FUNCTION__);
+    if(!beq) {
+        printf("%s: Could not find b.eq\n",__FUNCTION__);
         return -1;
     }
     
-    printf("%s: Found next b.eq at %p\n",__FUNCTION__, (void*) next_beq);
+    printf("%s: Found b.eq at %p\n",__FUNCTION__, (void*) beq);
     
-    next_beq = step64(kernel_buf, next_beq + 0x4, 100, INSN_BEQ);
-    
-    if(!next_beq) {
-        printf("%s: Could not find next b.eq\n",__FUNCTION__);
-        return -1;
-    }
-    
-    printf("%s: Found next b.eq at %p\n",__FUNCTION__, (void*) next_beq);
-    
-    addr_t caller_equals_victim = next_beq - 0x4;
+    addr_t caller_equals_victim = beq - 0x4;
     
     printf("%s: Patching tfp0 at %p\n",__FUNCTION__,(void*)caller_equals_victim);
     
