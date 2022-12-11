@@ -515,7 +515,7 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
     
     printf("%s: Patching tfp0 at %p\n",__FUNCTION__,(void*)caller_equals_victim);
     
-    *(uint32_t *)(caller_equals_victim) = 0xEB1F03FF;
+    *(uint32_t *)(kernel_buf + caller_equals_victim) = 0xEB1F03FF;
     return 0;
 }
 
