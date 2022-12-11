@@ -509,6 +509,8 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
         return -1;
     }
     
+    printf("%s: Found next b.eq at %p\n",__FUNCTION__, (void*) next_beq);
+    
     return 0;
 }
 
