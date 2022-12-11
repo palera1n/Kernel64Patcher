@@ -442,12 +442,11 @@ int is_root_hash_authentication_required_ios_patch(void* kernel_buf,size_t kerne
     printf("%s: Found \"%s\" str loc at %p\n", __FUNCTION__, authentication_required_string, GET_OFFSET(kernel_len, authentication_required_loc));
 
     addr_t authentication_required_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, authentication_required_loc));
+    
     if(!authentication_required_ref) {
         printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, authentication_required_string);
         return -1;
     }
-
-    /*000080D2 C0035FD6*/
 
     printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, authentication_required_string, (void*) authentication_required_ref);
     addr_t function = authentication_required_ref - 0x50;
@@ -481,6 +480,45 @@ int launchd_path_patch(void* kernel_buf,size_t kernel_len) {
     return 0;
 }
 
+int tfp0_patch(void* kernel_buf,size_t kernel_len) {
+
+    char pineapple_pizza_string[sizeof("Just like pineapple on pizza, this task/thread port doesn't belong here.")] = "Just like pineapple on pizza, this task/thread port doesn't belong here.";
+
+    unsigned char *pineapple_pizza_loc = memmem(kernel_buf, kernel_len, pineapple_pizza_string, sizeof("Just like pineapple on pizza, this task/thread port doesn't belong here.") - 1);
+
+    if(!pineapple_pizza_loc) {
+        printf("%s: Could not find \"%s\" string\n", __FUNCTION__, pineapple_pizza_string);
+        return -1;
+    }
+
+    printf("%s: Found \"%s\" str loc at %p\n", __FUNCTION__, pineapple_pizza_string, GET_OFFSET(kernel_len, pineapple_pizza_loc));
+
+    addr_t pineapple_pizza_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, pineapple_pizza_loc));
+    
+    if(!pineapple_pizza_ref) {
+        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, pineapple_pizza_string);
+        return -1;
+    }
+    
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, pineapple_pizza_string, (void*) pineapple_pizza_ref);
+    
+    addr_t beq = step64(kernel_buf, pineapple_pizza_ref, 100, INSN_BEQ);
+    
+    if(!beq) {
+        printf("%s: Could not find b.eq\n",__FUNCTION__);
+        return -1;
+    }
+    
+    printf("%s: Found b.eq at %p\n",__FUNCTION__, (void*) beq);
+    
+    addr_t caller_equals_victim = beq - 0x4;
+    
+    printf("%s: Patching tfp0 at %p\n",__FUNCTION__,(void*)caller_equals_victim);
+    
+    *(uint32_t *)(kernel_buf + caller_equals_victim) = 0xEB1F03FF;
+    return 0;
+}
+
 int main(int argc, char **argv) {
     
     printf("%s: Starting...\n", __FUNCTION__);
@@ -499,6 +537,7 @@ int main(int argc, char **argv) {
         printf("\t-p\t\tPatch AMFIInitializeLocalSigningPublicKey (iOS 15 Only)\n");
         printf("\t-h\t\tPatch is_root_hash_authentication_required_ios (iOS 16 only)\n");
         printf("\t-l\t\tPatch launchd path\n");
+        printf("\t-t\t\tPatch tfp0\n");
         return 0;
     }
     
@@ -575,6 +614,10 @@ int main(int argc, char **argv) {
         if(strcmp(argv[i], "-l") == 0) {
             printf("Kernel: Adding launchd patch...\n");
             launchd_path_patch(kernel_buf,kernel_len);
+        }
+        if(strcmp(argv[i], "-t") == 0) {
+            printf("Kernel: Adding tfp0 patch...\n");
+            tfp0_patch(kernel_buf,kernel_len);
         }
     }
     
