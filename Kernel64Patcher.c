@@ -537,6 +537,7 @@ int main(int argc, char **argv) {
         printf("\t-p\t\tPatch AMFIInitializeLocalSigningPublicKey (iOS 15 Only)\n");
         printf("\t-h\t\tPatch is_root_hash_authentication_required_ios (iOS 16 only)\n");
         printf("\t-l\t\tPatch launchd path\n");
+        printf("\t-t\t\tPatch tfp0\n");
         return 0;
     }
     
