@@ -511,7 +511,7 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
     
     printf("%s: Found next b.eq at %p\n",__FUNCTION__, (void*) next_beq);
     
-    next_beq = step64(kernel_buf, pineapple_pizza_ref + 0x8, 100, INSN_BEQ);
+    next_beq = step64(kernel_buf, next_beq + 0x8, 100, INSN_BEQ);
     
     if(!next_beq) {
         printf("%s: Could not find next b.eq\n",__FUNCTION__);
