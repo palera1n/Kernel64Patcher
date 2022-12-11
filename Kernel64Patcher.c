@@ -500,6 +500,8 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
         return -1;
     }
     
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, pineapple_pizza_string, (void*) pineapple_pizza_ref);
+    
     return 0;
 }
 
