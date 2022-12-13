@@ -19,6 +19,51 @@ static uint32_t arm64_branch_instruction(uintptr_t from, uintptr_t to) {
   return from > to ? 0x18000000 - (from - to) / 4 : 0x14000000 + (to - from) / 4;
 }
 
+addr_t
+find_symbol(const char *symbol)
+{
+    unsigned i;
+    const struct mach_header *hdr = kernel_mh;
+    const uint8_t *q;
+    int is64 = 0;
+
+    if (IS64(hdr)) {
+        is64 = 4;
+    }
+
+    /* XXX will only work on a decrypted kernel */
+    if (!kernel_delta) {
+        return 0;
+    }
+
+    /* XXX I should cache these.  ohwell... */
+    q = (uint8_t *)(hdr + 1) + is64;
+    for (i = 0; i < hdr->ncmds; i++) {
+        const struct load_command *cmd = (struct load_command *)q;
+        if (cmd->cmd == LC_SYMTAB) {
+            const struct symtab_command *sym = (struct symtab_command *)q;
+            const char *stroff = (const char *)kernel + sym->stroff + kernel_delta;
+            if (is64) {
+                uint32_t k;
+                const struct nlist_64 *s = (struct nlist_64 *)(kernel + sym->symoff + kernel_delta);
+                for (k = 0; k < sym->nsyms; k++) {
+                    if (s[k].n_type & N_STAB) {
+                        continue;
+                    }
+                    if (s[k].n_value && (s[k].n_type & N_TYPE) != N_INDR) {
+                        if (!strcmp(symbol, stroff + s[k].n_un.n_strx)) {
+                            /* XXX this is an unslid address */
+                            return s[k].n_value;
+                        }
+                    }
+                }
+            }
+        }
+        q = q + cmd->cmdsize;
+    }
+    return 0;
+}
+
 // iOS 15 "%s: firmware validation failed %d\" @%s:%d SPU Firmware Validation Patch
 int get_SPUFirmwareValidation_patch(void *kernel_buf, size_t kernel_len) {
     printf("%s: Entering ...\n",__FUNCTION__);
