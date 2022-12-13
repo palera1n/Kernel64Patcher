@@ -519,6 +519,19 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
     return 0;
 }
 
+int force_developer_mode_state_true(void* kernel_buf,size_t kernel_len) {
+    addr_t developer_mode_state_func = find_symbol("_developer_mode_state");
+    
+    if(!developer_mode_state_func) {
+        printf("%s: Could not find developer_mode_state\n",__FUNCTION__);
+        return -1;
+    }
+    
+    printf("%s: Found developer_mode_state at %p\n",__FUNCTION__, (void*) developer_mode_state_func);
+    
+    return 0;
+}
+
 int main(int argc, char **argv) {
     
     printf("%s: Starting...\n", __FUNCTION__);
@@ -617,6 +630,10 @@ int main(int argc, char **argv) {
         }
         if(strcmp(argv[i], "-t") == 0) {
             printf("Kernel: Adding tfp0 patch...\n");
+            tfp0_patch(kernel_buf,kernel_len);
+        }
+         if(strcmp(argv[i], "-d") == 0) {
+            printf("Kernel: Adding developer_mode_state patch...\n");
             tfp0_patch(kernel_buf,kernel_len);
         }
     }
