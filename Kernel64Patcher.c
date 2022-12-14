@@ -637,7 +637,7 @@ int main(int argc, char **argv) {
         }
          if(strcmp(argv[i], "-d") == 0) {
             printf("Kernel: Adding developer_mode_state patch...\n");
-            tfp0_patch(kernel_buf,kernel_len);
+            force_developer_mode_state_true(kernel_buf,kernel_len);
         }
     }
     
