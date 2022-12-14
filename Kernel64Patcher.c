@@ -541,6 +541,15 @@ int force_developer_mode(void* kernel_buf,size_t kernel_len) {
     
     printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) trustcache_capabilities_ref);
     
+    addr_t ldarb = step64(kernel_buf, trustcache_capabilities_ref, 100, INSN_LDARB);
+    
+    if(!ldarb) {
+        printf("%s: Could not find ldarb\n",__FUNCTION__);
+        return -1;
+    }
+    
+    printf("%s: Found ldarb at %p\n",__FUNCTION__, (void*) ldarb);
+    
     return 0;
 }
 
