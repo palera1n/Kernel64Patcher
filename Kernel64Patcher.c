@@ -554,7 +554,7 @@ int force_developer_mode(void* kernel_buf,size_t kernel_len) {
     
     printf("%s: Patching developer mode at %p\n",__FUNCTION__,(void*)add);
     
-    *(uint32_t *)(kernel_buf + add) = 0x20008052 + *(uint32_t *)(kernel_buf + add) - 0x00FDDF08
+    *(uint32_t *)(kernel_buf + add) = 0x20008052 + *(uint32_t *)(kernel_buf + add) - 0x00FDDF08;
     
     return 0;
 }
