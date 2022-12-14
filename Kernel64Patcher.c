@@ -520,7 +520,7 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
     return 0;
 }
 
-int force_developer_mode_state_true(void* kernel_buf,size_t kernel_len) {
+int force_developer_mode(void* kernel_buf,size_t kernel_len) {
     char trustcache_capabilities_string[sizeof("attempted to query static trust cache capabilities without init @%s:%d")] = "attempted to query static trust cache capabilities without init @%s:%d";
     
     unsigned char *trustcache_capabilities_loc = memmem(kernel_buf, kernel_len, trustcache_capabilities_string, sizeof("attempted to query static trust cache capabilities without init @%s:%d") - 1);
@@ -530,7 +530,16 @@ int force_developer_mode_state_true(void* kernel_buf,size_t kernel_len) {
         return -1;
     }
     
-    printf("%s: Found attempted to query static trust cache capabilities without init @%%s:%%d str loc at %p\n",__FUNCTION__, (void*) GET_OFFSET(kernel_len, trustcache_capabilities_loc));
+    printf("%s: Found \"%s\" str loc at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) GET_OFFSET(kernel_len, trustcache_capabilities_loc));
+    
+    addr_t trustcache_capabilities_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, trustcache_capabilities_loc));
+    
+    if(!trustcache_capabilities_ref) {
+        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, trustcache_capabilities_string);
+        return -1;
+    }
+    
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) trustcache_capabilities);
     
     return 0;
 }
@@ -554,6 +563,7 @@ int main(int argc, char **argv) {
         printf("\t-h\t\tPatch is_root_hash_authentication_required_ios (iOS 16 only)\n");
         printf("\t-l\t\tPatch launchd path\n");
         printf("\t-t\t\tPatch tfp0\n");
+        printf("\t-d\t\tPatch developer mode\n");
         return 0;
     }
     
@@ -636,8 +646,8 @@ int main(int argc, char **argv) {
             tfp0_patch(kernel_buf,kernel_len);
         }
          if(strcmp(argv[i], "-d") == 0) {
-            printf("Kernel: Adding developer_mode_state patch...\n");
-            force_developer_mode_state_true(kernel_buf,kernel_len);
+            printf("Kernel: Adding force developer mode patch...\n");
+            force_developer_mode(kernel_buf,kernel_len);
         }
     }
     
