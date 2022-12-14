@@ -539,7 +539,7 @@ int force_developer_mode(void* kernel_buf,size_t kernel_len) {
         return -1;
     }
     
-    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) trustcache_capabilities);
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) trustcache_capabilities_ref);
     
     return 0;
 }
