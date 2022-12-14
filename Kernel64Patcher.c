@@ -521,14 +521,16 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
 }
 
 int force_developer_mode_state_true(void* kernel_buf,size_t kernel_len) {
-    addr_t developer_mode_state_func = find_symbol("_developer_mode_state");
+    char trustcache_capabilities_string[sizeof("attempted to query static trust cache capabilities without init @%s:%d")] = "attempted to query static trust cache capabilities without init @%s:%d";
     
-    if(!developer_mode_state_func) {
-        printf("%s: Could not find developer_mode_state\n",__FUNCTION__);
+    unsigned char *trustcache_capabilities_loc = memmem(kernel_buf, kernel_len, trustcache_capabilities_string, sizeof("attempted to query static trust cache capabilities without init @%s:%d") - 1);
+    
+    if(!trustcache_capabilities_loc) {
+        printf("%s: Could not find attempted to query static trust cache capabilities without init @%%s:%%d\n",__FUNCTION__);
         return -1;
     }
     
-    printf("%s: Found developer_mode_state at %p\n",__FUNCTION__, (void*) developer_mode_state_func);
+    printf("%s: Found attempted to query static trust cache capabilities without init @%%s:%%d at %p\n",__FUNCTION__, (void*) trustcache_capabilities_loc);
     
     return 0;
 }
