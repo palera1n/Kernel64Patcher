@@ -530,7 +530,7 @@ int force_developer_mode_state_true(void* kernel_buf,size_t kernel_len) {
         return -1;
     }
     
-    printf("%s: Found attempted to query static trust cache capabilities without init @%%s:%%d at %p\n",__FUNCTION__, (void*) trustcache_capabilities_loc);
+    printf("%s: Found attempted to query static trust cache capabilities without init @%%s:%%d str loc at %p\n",__FUNCTION__, (void*) GET_OFFSET(kernel_len, trustcache_capabilities_loc));
     
     return 0;
 }
