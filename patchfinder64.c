@@ -537,6 +537,7 @@ term_kernel(void)
 #define INSN_CBZ    0x34000000, 0xFC000000
 #define INSN_BLR    0xD63F0000, 0xFFFFFC1F
 #define INSN_BEQ    0x540006E0, 0xFFFFFFFF
+#define INSN_LDARB  0x08DFFC00, 0xFFFFFEF0
 
 addr_t
 find_register_value(addr_t where, int reg)

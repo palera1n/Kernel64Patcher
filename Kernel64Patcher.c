@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mach-o/nlist.h>
 
 #include "patchfinder64.c"
 
@@ -519,6 +520,45 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
     return 0;
 }
 
+int force_developer_mode(void* kernel_buf,size_t kernel_len) {
+    char trustcache_capabilities_string[sizeof("attempted to query static trust cache capabilities without init @%s:%d")] = "attempted to query static trust cache capabilities without init @%s:%d";
+    
+    unsigned char *trustcache_capabilities_loc = memmem(kernel_buf, kernel_len, trustcache_capabilities_string, sizeof("attempted to query static trust cache capabilities without init @%s:%d") - 1);
+    
+    if(!trustcache_capabilities_loc) {
+        printf("%s: Could not find attempted to query static trust cache capabilities without init @%%s:%%d\n",__FUNCTION__);
+        return -1;
+    }
+    
+    printf("%s: Found \"%s\" str loc at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) GET_OFFSET(kernel_len, trustcache_capabilities_loc));
+    
+    addr_t trustcache_capabilities_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, trustcache_capabilities_loc));
+    
+    if(!trustcache_capabilities_ref) {
+        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, trustcache_capabilities_string);
+        return -1;
+    }
+    
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) trustcache_capabilities_ref);
+    
+    addr_t ldarb = step64(kernel_buf, trustcache_capabilities_ref, 100, INSN_LDARB);
+    
+    if(!ldarb) {
+        printf("%s: Could not find ldarb\n",__FUNCTION__);
+        return -1;
+    }
+    
+    printf("%s: Found ldarb at %p\n",__FUNCTION__, (void*) ldarb);
+    
+    addr_t add = ldarb + 0x4;
+    
+    printf("%s: Patching developer mode at %p\n",__FUNCTION__,(void*)add);
+    
+    *(uint32_t *)(kernel_buf + add) = 0x20008052 + *(uint32_t *)(kernel_buf + add) - 0x00FDDF08;
+    
+    return 0;
+}
+
 int main(int argc, char **argv) {
     
     printf("%s: Starting...\n", __FUNCTION__);
@@ -538,6 +578,7 @@ int main(int argc, char **argv) {
         printf("\t-h\t\tPatch is_root_hash_authentication_required_ios (iOS 16 only)\n");
         printf("\t-l\t\tPatch launchd path\n");
         printf("\t-t\t\tPatch tfp0\n");
+        printf("\t-d\t\tPatch developer mode\n");
         return 0;
     }
     
@@ -618,6 +659,10 @@ int main(int argc, char **argv) {
         if(strcmp(argv[i], "-t") == 0) {
             printf("Kernel: Adding tfp0 patch...\n");
             tfp0_patch(kernel_buf,kernel_len);
+        }
+         if(strcmp(argv[i], "-d") == 0) {
+            printf("Kernel: Adding force developer mode patch...\n");
+            force_developer_mode(kernel_buf,kernel_len);
         }
     }
     
