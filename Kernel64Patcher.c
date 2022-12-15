@@ -521,9 +521,9 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
 }
 
 int force_developer_mode(void* kernel_buf,size_t kernel_len) {
-    char devmode_status_string[sizeof("AMFI: trying to get developer mode status from ACM\n")] = "AMFI: trying to get developer mode status from ACM\n";
+    char devmode_status_string[sizeof("AMFI: trying to get developer mode status from ACM\\n")] = "AMFI: trying to get developer mode status from ACM\\n";
     
-    unsigned char *devmode_status_loc = memmem(kernel_buf, kernel_len, devmode_status_string, sizeof("AMFI: trying to get developer mode status from ACM\n") - 1);
+    unsigned char *devmode_status_loc = memmem(kernel_buf, kernel_len, devmode_status_string, sizeof("AMFI: trying to get developer mode status from ACM\\n") - 1);
     
     if(!devmode_status_loc) {
         printf("%s: Could not find \"%s\"\n",__FUNCTION__, devmode_status_string);
