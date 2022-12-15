@@ -521,25 +521,25 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
 }
 
 int force_developer_mode(void* kernel_buf,size_t kernel_len) {
-    char devmode_status_string[sizeof("AMFI: trying to get developer mode status from ACM\\n")] = "AMFI: trying to get developer mode status from ACM\\n";
+    char devmode_status_string[sizeof("AMFI: trying to get developer mode status from ACM\n")] = "AMFI: trying to get developer mode status from ACM\n";
     
-    unsigned char *devmode_status_loc = memmem(kernel_buf, kernel_len, devmode_status_string, sizeof("AMFI: trying to get developer mode status from ACM\\n") - 1);
+    unsigned char *devmode_status_loc = memmem(kernel_buf, kernel_len, devmode_status_string, sizeof("AMFI: trying to get developer mode status from ACM\n") - 1);
     
     if(!devmode_status_loc) {
-        printf("%s: Could not find \"%s\"\n",__FUNCTION__, devmode_status_string);
+        printf("%s: Could not find \"AMFI: trying to get developer mode status from ACM\"\n",__FUNCTION__);
         return -1;
     }
     
-    printf("%s: Found \"%s\" str loc at %p\n",__FUNCTION__, devmode_status_string, (void*) GET_OFFSET(kernel_len, devmode_status_loc));
+    printf("%s: Found \"AMFI: trying to get developer mode status from ACM\" str loc at %p\n",__FUNCTION__, (void*) GET_OFFSET(kernel_len, devmode_status_loc));
     
     addr_t devmode_status_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, devmode_status_loc));
     
     if(!devmode_status_ref) {
-        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, devmode_status_string);
+        printf("%s: Could not find \"AMFI: trying to get developer mode status from ACM\" xref\n",__FUNCTION__);
         return -1;
     }
     
-    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, devmode_status_string, (void*) devmode_status_ref);
+    printf("%s: Found \"AMFI: trying to get developer mode status from ACM\" xref at %p\n",__FUNCTION__, (void*) devmode_status_ref);
     
     addr_t cbz = step64_back(kernel_buf, devmode_status_ref, 100, INSN_CBZ);
     
