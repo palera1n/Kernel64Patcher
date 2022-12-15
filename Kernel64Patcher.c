@@ -521,40 +521,36 @@ int tfp0_patch(void* kernel_buf,size_t kernel_len) {
 }
 
 int force_developer_mode(void* kernel_buf,size_t kernel_len) {
-    char trustcache_capabilities_string[sizeof("attempted to query static trust cache capabilities without init @%s:%d")] = "attempted to query static trust cache capabilities without init @%s:%d";
+    char devmode_status_string[sizeof("AMFI: trying to get developer mode status from ACM\n")] = "AMFI: trying to get developer mode status from ACM\n";
     
-    unsigned char *trustcache_capabilities_loc = memmem(kernel_buf, kernel_len, trustcache_capabilities_string, sizeof("attempted to query static trust cache capabilities without init @%s:%d") - 1);
+    unsigned char *devmode_status_loc = memmem(kernel_buf, kernel_len, trustcache_capabilities_string, sizeof("AMFI: trying to get developer mode status from ACM\n") - 1);
     
-    if(!trustcache_capabilities_loc) {
-        printf("%s: Could not find attempted to query static trust cache capabilities without init @%%s:%%d\n",__FUNCTION__);
+    if(!devmode_status_loc) {
+        printf("%s: Could not find \"%s\"\n",__FUNCTION__, devmode_status_string);
         return -1;
     }
     
-    printf("%s: Found \"%s\" str loc at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) GET_OFFSET(kernel_len, trustcache_capabilities_loc));
+    printf("%s: Found \"%s\" str loc at %p\n",__FUNCTION__, devmode_status_string, (void*) GET_OFFSET(kernel_len, devmode_status_loc));
     
-    addr_t trustcache_capabilities_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, trustcache_capabilities_loc));
+    addr_t devmode_status_ref = xref64(kernel_buf,0,kernel_len,(addr_t)GET_OFFSET(kernel_len, devmode_status_loc));
     
-    if(!trustcache_capabilities_ref) {
-        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, trustcache_capabilities_string);
+    if(!devmode_status_ref) {
+        printf("%s: Could not find \"%s\" xref\n",__FUNCTION__, devmode_status_string);
         return -1;
     }
     
-    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, trustcache_capabilities_string, (void*) trustcache_capabilities_ref);
+    printf("%s: Found \"%s\" xref at %p\n",__FUNCTION__, devmode_status_string, (void*) devmode_status_ref);
     
-    addr_t ldarb = step64(kernel_buf, trustcache_capabilities_ref, 100, INSN_LDARB);
+    addr_t cbz = step64_back(kernel_buf, devmode_status_ref, 100, INSN_CBZ);
     
-    if(!ldarb) {
-        printf("%s: Could not find ldarb\n",__FUNCTION__);
+    if(!cbz) {
+        printf("%s: Could not find cbz\n",__FUNCTION__);
         return -1;
     }
     
-    printf("%s: Found ldarb at %p\n",__FUNCTION__, (void*) ldarb);
+    printf("%s: Patching developer mode at %p\n",__FUNCTION__,(void*)cbz);
     
-    addr_t add = ldarb + 0x4;
-    
-    printf("%s: Patching developer mode at %p\n",__FUNCTION__,(void*)add);
-    
-    *(uint32_t *)(kernel_buf + add) = 0x20008052 + *(uint32_t *)(kernel_buf + add) - 0x00FDDF08;
+    *(uint32_t *)(kernel_buf + cbz) = *(uint32_t *)(kernel_buf + cbz) + 0x1; // turn this into a cbnz
     
     return 0;
 }
