@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mach-o/nlist.h>
 
 #include "patchfinder64.c"
 
