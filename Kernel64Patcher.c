@@ -560,6 +560,7 @@ int main(int argc, char **argv) {
     FILE* fp = NULL;
     
     if(argc < 4){
+        printf("Version: " VERSION "\n");
         printf("Usage: %s <kernel_in> <kernel_out> <args>\n",argv[0]);
         printf("\t-a\t\tPatch AMFI\n");
         printf("\t-f\t\tPatch AppleFirmwareUpdate img4 signature check\n");
