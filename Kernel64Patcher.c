@@ -475,7 +475,10 @@ int launchd_path_patch(void* kernel_buf,size_t kernel_len) {
 
     printf("%s: Patching launchd at %p\n",__FUNCTION__,(void*)addr);
 
-    *(uint32_t *)(launchd_path_loc + 0x3) = 0x6A;
+    *(uint32_t *)(launchd_path_loc) = 0x69626A2F;
+    *(uint32_t *)(launchd_path_loc + 0x4) = 0x616C2F6E;
+    *(uint32_t *)(launchd_path_loc + 0x8) = 0x68636E75;
+    *(uint32_t *)(launchd_path_loc + 0x12) = 0x64;
     return 0;
 }
 
