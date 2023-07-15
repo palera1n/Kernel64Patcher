@@ -1,6 +1,9 @@
 # Kernel64Patcher
 A 64 Bit kernel patcher based on xerub's patchfinder64, forked for palera1n
 
+### Warning
+Was for palera1n.sh, this is no longer maintained.
+
 ## Compiling
 ```
 make
